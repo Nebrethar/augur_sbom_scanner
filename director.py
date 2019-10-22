@@ -19,11 +19,12 @@ if __name__ == "__main__":
         port = config["port"]
         dsfile = config["dsfile"]
         ipath = config["repos_path"]
+        schema = config["schema"]
         print("---------------------")
         print("INITIAL SCANS RUNNING")
         print("---------------------")
-        s.scan(dbname, user, password, host, port, dsfile, ipath)
+        s.scan(dbname, user, password, host, port, dsfile, ipath, schema)
         print("------------------")
         print("SBOM SCANS RUNNING")
         print("------------------")
-        p.scan(dbname, user, password, host, port, dsfile, ipath)
+        p.scan(dbname, user, password, host, port, dsfile, ipath, schema)

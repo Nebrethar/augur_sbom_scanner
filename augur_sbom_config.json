@@ -1,9 +1,10 @@
 {
-  "dbname": "****",
-  "user": "****",
-  "password": "****",
-  "host": "localhost",
+  "dbname": "snell",
+  "user": "augur",
+  "password": "mcguire18",
+  "host": "nekocase.augurlabs.io",
   "port": 5433,
-  "dsfile": "2.0.tag.coverage",
-  "repos_path": "~/"
+  "dsfile": "3.0.tag.coverage",
+  "repos_path": "/mnt/c/Users/Nebre/dosocs2test"
+  "schema": "public"
 }
