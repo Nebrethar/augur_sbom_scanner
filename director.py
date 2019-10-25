@@ -19,7 +19,6 @@ if __name__ == "__main__":
         port = config["port"]
         dsfile = config["dsfile"]
         ipath = config["repos_path"]
-        schema = config["schema"]
         print("---------------------")
         print("INITIAL SCANS RUNNING")
         print("---------------------")
