@@ -9,61 +9,62 @@ import requests
 #class DoSOCSv2(object):
     #"""Uses the DoSOCSv2 database to return dataframes with interesting GitHub indicators"""
 
-def parse_json(package_sx_1, package_sr_1, package_sr_3, package_cr_1, package_li_1, package_lc_1, cur, repo_id):
+def parse_json(doc_1, cre_1, pac_1, pac_lif_1, pac_2, fil_dat_1, fil_rel_1, bas_rel_1, cur, repo_id):
     license_information = {}
+    temp_1 = {}
+    for i in range(0, int(len(doc_1[0])/2)):
+        j = i*2
+        temp_1[doc_1[0][j]] = doc_1[0][j+1]
+
+    doc_1_temp = {**temp_1}
 
     temp_1 = {}
-    for i in range(0, int(len(package_lc_1[0])/2)):
+    for i in range(0, int(len(cre_1[0])/2)):
         j = i*2
-        temp_1[package_lc_1[0][j]] = package_lc_1[0][j+1]
+        temp_1[cre_1[0][j]] = cre_1[0][j+1]
 
-    coverage_temp = {**temp_1}
+    cre_1_temp = {**temp_1}
 
     temp_1 = {}
-    for i in range(0, int(len(package_sx_1[0])/2)):
+    for i in range(0, int(len(pac_1[0])/2)):
         j = i*2
-        temp_1[package_sx_1[0][j]] = package_sx_1[0][j+1]
-
-    spdx_temp = {**temp_1}
-
-    temp_1 = {}
-    for i in range(0, int(len(package_sr_1[0])/2)):
-        j = i*2
-        if package_sr_1[0][j] != '':
-            temp_1[package_sr_1[0][j]] = package_sr_1[0][j+1]
-    #print(package_sr_2)
-    #print(package_sr_2[0])
-    temp_3 = {}
-    for i in range(0, int(len(package_sr_3[0])/2)):
-        j = i*2
-        temp_3[package_sr_3[0][j]] = package_sr_3[0][j+1]
-
-    package_temp = {**temp_1, **temp_3}
-
-    temp_1 = {}
-    for i in range(0, int(len(package_cr_1[0])/2)):
-        j = i*2
-        temp_1[package_cr_1[0][j]] = package_cr_1[0][j+1]
-
-    creation_temp = {**temp_1}
-
-    #print(package_li_1)
+        temp_1[pac_1[0][j]] = pac_1[0][j+1]
     temp_2 = {}
-    for g in range(0, int(len(package_li_1))):
+    for i in range(0, int(len(pac_lif_1[0])/2)):
+        j = i*2
+        temp_2[pac_lif_1[0][j]] = pac_lif_1[0][j+1]
+    temp_3 = {}
+    for i in range(0, int(len(pac_2[0])/2)):
+        j = i*2
+        temp_3[pac_2[0][j]] = pac_2[0][j+1]
+
+    pac_temp = {**temp_1, **temp_2, **temp_3}
+
+    temp_2 = {}
+    for g in range(0, int(len(fil_dat_1))):
         temp_1 = {}
-        for i in range(0, int(len(package_li_1[g])/2)):
+        for i in range(0, int(len(fil_dat_1[g])/2)):
             j = i*2
-            temp_1[package_li_1[g][j]] = package_li_1[g][j+1]
-        temp_2["License Data " + str(g)] = temp_1
+            temp_1[fil_dat_1[g][j]] = fil_dat_1[g][j+1]
+        temp_1['File Relationship'] = fil_rel_1[g][2].split(": ")[1]
+        temp_2["File " + str(g)] = temp_1
+    fil_temp = {**temp_2}
 
-    license_temp = {**temp_2}
+    temp_2 = {}
+    for k in range(0, int(len(bas_rel_1))):
+        temp_2["Relationship " + str(k)] = bas_rel_1[k][1]
+    bas_rel_temp = {**temp_2}
 
-    license_information['Coverage'] = coverage_temp
-    license_information['SPDX Data'] = spdx_temp
-    license_information['Package'] = package_temp
-    license_information['Creation'] = creation_temp
-    license_information['Licenses'] = license_temp
+    license_information['Document Information'] = doc_1_temp
+    license_information['Creation Information'] = cre_1_temp
+    license_information['Package Information'] = pac_temp
+    license_information['File Information'] = fil_temp
+    license_information['Package Relationships'] = bas_rel_temp
 
+    #print(license_information)
+
+    #with open('ex.json', 'w+') as example:
+    #    json.dump(license_information, example)
     cur.execute("insert into augur_data.repo_sbom_scans(repo_id, sbom_scan) VALUES(" + str(repo_id)  + "," +  chr(39) + str(json.dumps(license_information)) + chr(39) + ");")
 
 def grabreg(records, repo_id, dsfile):
@@ -81,15 +82,18 @@ def grabreg(records, repo_id, dsfile):
     if err:
         print(err.decode('UTF-8'))
     #print (out)
-    package_sx_1 = re.findall(r'(SPDXVersion): (.*)\n(DataLicense): (.*)\n(DocumentNamespace): (.*)\n(DocumentName): (.*)\n(SPDXID): (.*)\n(DocumentComment): (.*)\n', out.decode('UTF-8'))
-    package_sr_1 = re.findall(r'(PackageName): (.*)\n(SPDXID): (.*)\n(PackageVersion|)? ?(.*|)\n?(PackageFileName): (.*)\n(PackageSupplier): (.*)\n(PackageOriginator): (.*)\n(PackageDownloadLocation): (.*)\n(PackageVerificationCode):? ?(.*|)\n?(PackageHomePage): (.*)\n(PackageLicenseConcluded):', out.decode('UTF-8'))
-    package_sr_3 = re.findall(r'(PackageLicenseDeclared): (.*)\n(PackageLicenseComments): (.*)\n(PackageCopyrightText): (.*)\n(PackageSummary): (.*)\n(PackageDescription): (.*)\n(PackageComment): (.*|)', out.decode('UTF-8'))
-    package_cr_1 = re.findall(r'(Creator): (.*)\n(Created): (.*)\n(CreatorComment): (.*)\n(LicenseListVersion): (.*)\n', out.decode('UTF-8'))
-    package_li_1 = re.findall(r'(LicenseID): (.*)\n(LicenseName): (.*)\n(ExtractedText): (.*)\n(LicenseCrossReference): (.*)\n(LicenseComment): (.*)\n', out.decode('UTF-8'))
-    package_lc_1 = re.findall(r'(TotalFiles): (.*)\n(DeclaredLicenseFiles): (.*)\n(PercentTotalLicenseCoverage): (.*)\n', out.decode('UTF-8'))
-    return (package_sx_1, package_sr_1, package_sr_3, package_cr_1, package_li_1, package_lc_1)
+    #package_sr_1 = re.findall(r'(PackageName): (.*)\n(SPDXID): (.*)\n(PackageVersion|)? ?(.*|)\n?(PackageFileName): (.*)\n(PackageSupplier): (.*)\n(PackageOriginator): (.*)\n(PackageDownloadLocation): (.*)\n(PackageVerificationCode):? ?(.*|)\n?(PackageHomePage): (.*)\n(PackageLicenseConcluded):', out.decode('UTF-8'))
+    doc_1 = re.findall(r'(DataLicense): (.*)\n(SPDXID): (.*)\n(DocumentNamespace): (.*)\n(DocumentName): (.*)\n(DocumentComment|): ?(.*|)\n?(LicenseListVersion):(.*)', out.decode('UTF-8'))
+    cre_1 = re.findall(r'(Creator): (.*)\n(Created): (.*)\n(CreatorComment|): ?(.*|)', out.decode('UTF-8'))
+    pac_1 = re.findall(r'(PackageName): (.*)\n(SPDXID): (.*)\n(PackageFileName): (.*)\n(PackageDownloadLocation): (.*)\n(PackageVerificationCode): (.*)\n(PackageHomePage): (.*)\n(PackageLicenseConcluded): (.*)\n(PackageLicenseDeclared): (.*)', out.decode('UTF-8'))
+    pac_lif_1 = re.findall(r'(PackageLicenseInfoFromFiles): (.*)', out.decode('UTF-8'))
+    pac_2 = re.findall(r'(PackageCopyrightText): (.*)', out.decode('UTF-8'))
+    fil_dat_1 = re.findall(r'(FileName): (.*)\n(SPDXID): (.*)\n(FileType): (.*)\n(FileChecksum): (.*)\n(LicenseConcluded): (.*)\n(LicenseInfoInFile): (.*)\n(LicenseComments|): ?(.*|)\n(FileCopyrightText): (.*)\n(FileComment|): ?(.*|)\n(FileNotice|): ?(.*|)\n', out.decode('UTF-8'))
+    fil_rel_1 = re.findall(r'(## Relationships)\n((\w.*)\n)*', out.decode('UTF-8'))
+    bas_rel_1 = re.findall(r'## --------------- Relationship ---------------\n(Relationship): (.*?)\n', out.decode('UTF-8'))
+    return (doc_1, cre_1, pac_1, pac_lif_1, pac_2, fil_dat_1, fil_rel_1, bas_rel_1)
 
-def scan(dbname, user, password, host, port, dsfile, ipath):
+def scan(dbname, user, password, host, port, dsfile, ipath, schema):
     connection = psycopg2.connect(
         user = user,
         password = password,
@@ -114,8 +118,8 @@ def scan(dbname, user, password, host, port, dsfile, ipath):
             records = cur.fetchall()
             print("****************")
             if records and records[0][0] != None:
-                (package_sx_1, package_sr_1, package_sr_3, package_cr_1, package_li_1, package_lc_1) = grabreg(records, repo_id, dsfile)
-                parse_json(package_sx_1, package_sr_1, package_sr_3, package_cr_1, package_li_1, package_lc_1, cur, repo_id)
+                (doc_1, cre_1, pac_1, pac_lif_1, pac_2, fil_dat_1, fil_rel_1, bas_rel_1) = grabreg(records, repo_id, dsfile)
+                parse_json(doc_1, cre_1, pac_1, pac_lif_1, pac_2, fil_dat_1, fil_rel_1, bas_rel_1, cur, repo_id)
                 connection.commit()
             else:
                 print("ERROR: RECORD DOES NOT EXIST IN MAPPING TABLE")
